@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interface HMI</title>
+<style>
+  :root { --bg:#f5f5f7; --fg:#1d1d1f; --accent:#0a84ff; --card:#fff; --muted:#86868b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1c1e; --fg:#f2f2f7; --card:#2c2c2e; --muted:#8e8e93; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui, sans-serif; }
+  header { padding:16px; font-weight:600; }
+  nav { display:flex; gap:8px; overflow-x:auto; padding:0 16px; }
+  nav button { flex:none; padding:8px 14px; border:0; border-radius:999px; background:var(--card); color:var(--fg); }
+  nav button.active { background:var(--accent); color:#fff; }
+  main { padding:16px; }
+  section { display:none; background:var(--card); border-radius:12px; padding:16px; }
+  section.active { display:block; }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:8px 16px; margin:0; }
+  dt { color:var(--muted); }
+  label { display:block; margin-top:12px; color:var(--muted); }
+  input, select { width:100%; box-sizing:border-box; padding:10px; font-size:16px; margin-top:4px; }
+  .btn { margin-top:16px; padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:16px; }
+  ul { list-style:none; padding:0; }
+  li { padding:8px 0; border-bottom:1px solid var(--bg); cursor:pointer; }
+</style>
+</head>
+<body>
+<header>Interface HMI</header>
+<nav>
+  <button class="active" data-tab="status">Statut</button>
+  <button data-tab="network">Réseau</button>
+  <button data-tab="system">Système</button>
+  <button data-tab="update">Mise à jour</button>
+  <button data-tab="report">Rapport</button>
+</nav>
+<main>
+  <section id="status" class="active">
+    <dl>
+      <dt>Nom</dt><dd id="s-name">—</dd>
+      <dt>Mode</dt><dd id="s-mode">—</dd>
+      <dt>Réseau</dt><dd id="s-ssid">—</dd>
+      <dt>Adresse IP</dt><dd id="s-ip">—</dd>
+    </dl>
+  </section>
+
+  <section id="network">
+    <button class="btn" id="scan">Rechercher les réseaux</button>
+    <ul id="wifi-list"></ul>
+    <label>SSID<input id="ssid"></label>
+    <label>Mot de passe<input id="wifi-pass" type="password"></label>
+    <button class="btn" id="connect">Se connecter</button>
+    <p id="net-msg"></p>
+  </section>
+
+  <section id="system">
+    <label>Nom convivial<input id="friendly"></label>
+    <label>Nouveau PIN (4 à 8 chiffres)<input id="new-pin" inputmode="numeric"></label>
+    <button class="btn" id="save-system">Enregistrer</button>
+    <p id="sys-msg"></p>
+  </section>
+
+  <section id="update">
+    <p>Vérification des mises à jour : à implémenter.</p>
+  </section>
+
+  <section id="report">
+    <p>Rapport de diagnostic : à implémenter.</p>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  document.querySelectorAll("nav button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll("section").forEach((s) => s.classList.remove("active"));
+      btn.classList.add("active");
+      $(btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  async function loadStatus() {
+    const r = await fetch("/api/status");
+    const d = await r.json();
+    $("s-name").textContent = d.config.friendly_name;
+    $("friendly").value = d.config.friendly_name;
+    $("s-mode").textContent = d.network.mode;
+    $("s-ssid").textContent = d.network.ssid || "—";
+    $("s-ip").textContent = d.network.ip || "—";
+  }
+
+  $("scan").addEventListener("click", async () => {
+    const r = await fetch("/api/wifi/scan");
+    const d = await r.json();
+    $("wifi-list").innerHTML = "";
+    d.networks.forEach((n) => {
+      const li = document.createElement("li");
+      li.textContent = `${n.ssid} (${n.signal}%)`;
+      li.onclick = () => { $("ssid").value = n.ssid; };
+      $("wifi-list").appendChild(li);
+    });
+  });
+
+  $("connect").addEventListener("click", async () => {
+    const r = await fetch("/api/wifi/connect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ssid: $("ssid").value, password: $("wifi-pass").value }),
+    });
+    const d = await r.json();
+    $("net-msg").textContent = d.ok ? "Connecté." : "Échec : " + d.message;
+  });
+
+  $("save-system").addEventListener("click", async () => {
+    const body = { friendly_name: $("friendly").value, new_pin: $("new-pin").value };
+    const r = await fetch("/api/system", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    $("sys-msg").textContent = r.ok ? "Enregistré." : "Erreur de saisie.";
+  });
+
+  loadStatus();
+</script>
+</body>
+</html>
