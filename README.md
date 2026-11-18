@@ -36,7 +36,7 @@ curl -fsSL https://raw.githubusercontent.com/len12-dev/hublot/main/install.sh | 
 
 - **Statut** : nom, mode réseau, SSID, adresse IP.
 - **Réseau** : scan des réseaux Wi-Fi, connexion.
-- **Système** : nom convivial, changement de PIN.
+- **Système** : nom convivial, changement de PIN, réglages des graves et des aigus.
 - **Mise à jour** : à implémenter.
 - **Rapport** : à implémenter.
 
@@ -59,3 +59,4 @@ systemd/
 - Pas de PIN par défaut figé : le PIN est défini par l'utilisateur.
 - Le PIN est stocké haché (PBKDF2), jamais en clair.
 - L'interface est prévue pour le réseau local ou le point d'accès, pas pour internet.
+- Le point d'accès de configuration est ouvert (sans mot de passe) : on s'y connecte physiquement près de l'enceinte, puis on saisit le Wi-Fi domestique.
