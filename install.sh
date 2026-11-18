@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Installation en une commande sur le Raspberry Pi :
-#   curl -fsSL https://raw.githubusercontent.com/len12-dev/hmi-raspberry/main/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/len12-dev/hublot/main/install.sh | sudo bash
 # Télécharge la dernière release, puis lance scripts/first_boot.sh.
 set -euo pipefail
 
-REPO="len12-dev/hmi-raspberry"
-VERSION="${HMI_VERSION:-latest}"
+REPO="len12-dev/hublot"
+VERSION="${HUBLOT_VERSION:-latest}"
 
 if [[ $EUID -ne 0 ]]; then
   echo "Lancer avec sudo." >&2
@@ -13,17 +13,17 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if [[ "$VERSION" == "latest" ]]; then
-  URL="https://github.com/$REPO/releases/latest/download/hmi.tar.gz"
+  URL="https://github.com/$REPO/releases/latest/download/hublot.tar.gz"
 else
-  URL="https://github.com/$REPO/releases/download/$VERSION/hmi.tar.gz"
+  URL="https://github.com/$REPO/releases/download/$VERSION/hublot.tar.gz"
 fi
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
 echo "Téléchargement de la release ($VERSION)…"
-curl -fsSL "$URL" -o "$WORK/hmi.tar.gz"
-tar -xzf "$WORK/hmi.tar.gz" -C "$WORK"
+curl -fsSL "$URL" -o "$WORK/hublot.tar.gz"
+tar -xzf "$WORK/hublot.tar.gz" -C "$WORK"
 
-cd "$WORK/hmi"
+cd "$WORK/hublot"
 bash scripts/first_boot.sh

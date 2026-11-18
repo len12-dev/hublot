@@ -1,8 +1,8 @@
 """Gestion réseau via NetworkManager (nmcli)."""
 import subprocess
 
-AP_CONNECTION = "hmi-ap"
-AP_SSID = "HMI-Setup"
+AP_CONNECTION = "hublot-ap"
+AP_SSID = "Hublot-Setup"
 
 
 def _run(args: list[str]) -> tuple[int, str]:

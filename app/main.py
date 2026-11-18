@@ -1,4 +1,4 @@
-"""Serveur web de l'interface HMI (Flask). Squelette de départ."""
+"""Serveur web de l'Hublot (Flask). Squelette de départ."""
 import functools
 import hashlib
 import hmac
@@ -11,10 +11,10 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, ses
 
 from network import connection_status, scan_wifi, connect_wifi
 
-CONFIG_PATH = Path(os.environ.get("HMI_CONFIG", "/etc/hmi/config.json"))
+CONFIG_PATH = Path(os.environ.get("HUBLOT_CONFIG", "/etc/hublot/config.json"))
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("HMI_SECRET", secrets.token_hex(32))
+app.secret_key = os.environ.get("HUBLOT_SECRET", secrets.token_hex(32))
 
 
 def load_config() -> dict:

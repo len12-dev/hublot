@@ -1,4 +1,4 @@
-# HMI Raspberry Pi — note de conception
+# Hublot Raspberry Pi — note de conception
 
 Programme d'interface humain-machine pour Raspberry Pi 3B, sans nom officiel pour l'instant.
 Inspiré du fonctionnement de l'interface web Frontier Silicon (onglets Statut / Réseau / Système / Mise à jour / Rapport, PIN, nom convivial, Wi-Fi), mais avec sa propre conception visuelle.
@@ -20,8 +20,8 @@ Inspiré du fonctionnement de l'interface web Frontier Silicon (onglets Statut /
 | OS | Raspberry Pi OS Lite (64 bits ou 32 bits selon le Pi 3B) |
 | Backend | Python 3 + Flask (léger, adapté au Pi 3B) |
 | Réseau | NetworkManager (`nmcli`) : scan, connexion, point d'accès |
-| Service | systemd (`hmi.service`) lancé au boot |
-| Config | fichier JSON (`/etc/hmi/config.json`), PIN haché |
+| Service | systemd (`hublot.service`) lancé au boot |
+| Config | fichier JSON (`/etc/hublot/config.json`), PIN haché |
 | Interface | HTML/CSS/JS sans framework, servie par Flask |
 
 ## Onglets de l'interface (inspirés de la capture)
@@ -37,7 +37,7 @@ Le PIN (par défaut à changer au premier lancement) protège les pages de régl
 ## Structure du projet
 
 ```
-hmi-raspberry/
+hublot/
   README.md
   app/
     main.py          # serveur Flask, routes et PIN
@@ -48,7 +48,7 @@ hmi-raspberry/
   scripts/
     first_boot.sh    # installation initiale
   systemd/
-    hmi.service      # lancement au démarrage
+    hublot.service      # lancement au démarrage
 ```
 
 ## Points à confirmer

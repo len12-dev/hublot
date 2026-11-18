@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Premier démarrage : installe Spotify Soloist et l'interface HMI.
+# Premier démarrage : installe Spotify Soloist et l'Hublot.
 # À lancer une seule fois avec sudo. Un fichier-marqueur évite de le relancer.
 set -euo pipefail
 
-MARKER=/etc/hmi/.installed
+MARKER=/etc/hublot/.installed
 SOLOIST_BASE="https://soloist-builds.spotifycdn.com"
 SOLOIST_DIR=/opt/soloist
-APP_DIR=/opt/hmi
+APP_DIR=/opt/hublot
 
 if [[ -f "$MARKER" ]]; then
   echo "Déjà installé."
@@ -23,7 +23,7 @@ esac
 apt-get update
 apt-get install -y python3-venv network-manager
 
-mkdir -p /etc/hmi "$APP_DIR"
+mkdir -p /etc/hublot "$APP_DIR"
 cp -r app/. "$APP_DIR"/
 
 python3 -m venv "$APP_DIR/venv"
@@ -40,9 +40,9 @@ rm -rf "$TMP"
 # Note : les builds Soloist expirent 90 jours après compilation (code de sortie 10).
 # Il faudra prévoir la mise à jour via la page « Mise à jour » de l'interface.
 
-cp systemd/hmi.service /etc/systemd/system/hmi.service
+cp systemd/hublot.service /etc/systemd/system/hublot.service
 systemctl daemon-reload
-systemctl enable hmi.service
+systemctl enable hublot.service
 
 touch "$MARKER"
 echo "Installation terminée. Redémarrage conseillé."

@@ -1,12 +1,12 @@
 [Unit]
-Description=Interface HMI (serveur web de configuration)
+Description=Hublot (serveur web de configuration)
 After=NetworkManager.service network-online.target
 Wants=network-online.target
 
 [Service]
-WorkingDirectory=/opt/hmi
-Environment=HMI_CONFIG=/etc/hmi/config.json
-ExecStart=/opt/hmi/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:80 main:app
+WorkingDirectory=/opt/hublot
+Environment=HUBLOT_CONFIG=/etc/hublot/config.json
+ExecStart=/opt/hublot/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:80 main:app
 Restart=on-failure
 
 [Install]
