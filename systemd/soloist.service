@@ -5,7 +5,9 @@ Wants=network-online.target
 
 [Service]
 # Fichier écrit par l'interface Hublot : SOLOIST_NAME et SOLOIST_KEY (mode 600)
-EnvironmentFile=/etc/hublot/soloist.env
+EnvironmentFile=-/etc/hublot/soloist.env
+# Sans clé API configurée dans l'interface, le service ne démarre pas (pas d'erreur)
+ExecCondition=/bin/sh -c 'test -s /etc/hublot/soloist.env'
 ExecStart=/opt/soloist/soloist -n ${SOLOIST_NAME} -k ${SOLOIST_KEY} -D /var/lib/soloist -C /var/cache/soloist -w 127.0.0.1:0
 StateDirectory=soloist
 CacheDirectory=soloist
