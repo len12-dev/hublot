@@ -21,7 +21,14 @@ case "$(uname -m)" in
 esac
 
 apt-get update
-apt-get install -y python3-venv network-manager
+apt-get install -y python3-venv network-manager pipewire pipewire-pulse wireplumber pipewire-alsa
+
+# Soloist passe par PipeWire, qui tourne dans la session d'un utilisateur.
+# On prend l'utilisateur qui a lancé sudo (ou pi par défaut).
+TARGET_USER="${SUDO_USER:-pi}"
+TARGET_UID="$(id -u "$TARGET_USER")"
+loginctl enable-linger "$TARGET_USER"
+usermod -aG audio "$TARGET_USER"
 
 mkdir -p /etc/hublot "$APP_DIR"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -43,6 +50,15 @@ rm -rf "$TMP"
 
 cp "$ROOT/systemd/hublot.service" /etc/systemd/system/hublot.service
 cp "$ROOT/systemd/soloist.service" /etc/systemd/system/soloist.service
+# Soloist tourne avec l'utilisateur qui possède la session PipeWire
+mkdir -p /etc/systemd/system/soloist.service.d
+cat > /etc/systemd/system/soloist.service.d/user.conf <<EOF
+[Service]
+User=$TARGET_USER
+Group=$TARGET_USER
+SupplementaryGroups=audio
+Environment=XDG_RUNTIME_DIR=/run/user/$TARGET_UID
+EOF
 systemctl daemon-reload
 systemctl enable hublot.service
 # soloist.service n'est activé qu'une fois la clé API saisie dans l'interface
