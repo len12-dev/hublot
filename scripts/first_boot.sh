@@ -42,8 +42,10 @@ rm -rf "$TMP"
 # Il faudra prévoir la mise à jour via la page « Mise à jour » de l'interface.
 
 cp "$ROOT/systemd/hublot.service" /etc/systemd/system/hublot.service
+cp "$ROOT/systemd/soloist.service" /etc/systemd/system/soloist.service
 systemctl daemon-reload
 systemctl enable hublot.service
+# soloist.service n'est activé qu'une fois la clé API saisie dans l'interface
 
 touch "$MARKER"
 echo "Installation terminée. Redémarrage conseillé."

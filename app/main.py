@@ -1,10 +1,11 @@
-"""Serveur web de l'Hublot (Flask). Squelette de départ."""
+"""Serveur web de l'Hublot (Flask)."""
 import functools
 import hashlib
 import hmac
 import json
 import os
 import secrets
+import subprocess
 from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
@@ -12,6 +13,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, ses
 from network import connection_status, scan_wifi, connect_wifi
 
 CONFIG_PATH = Path(os.environ.get("HUBLOT_CONFIG", "/etc/hublot/config.json"))
+SOLOIST_ENV = Path(os.environ.get("HUBLOT_SOLOIST_ENV", "/etc/hublot/soloist.env"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("HUBLOT_SECRET", secrets.token_hex(32))
@@ -37,6 +39,38 @@ def check_pin(pin: str) -> bool:
     if not cfg.get("pin_hash"):
         return False
     return hmac.compare_digest(hash_pin(pin, cfg["pin_salt"]), cfg["pin_hash"])
+
+
+# --- Soloist -----------------------------------------------------------------
+
+def read_soloist_env() -> dict:
+    if not SOLOIST_ENV.exists():
+        return {}
+    values = {}
+    for line in SOLOIST_ENV.read_text().splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            values[k] = v.strip().strip('"')
+    return values
+
+
+def write_soloist_env(name: str, key: str) -> None:
+    # Pas de guillemets ni d'antislashs dans le nom : évite les erreurs de parsing systemd
+    safe_name = name.replace('"', "").replace("\\", "")
+    SOLOIST_ENV.parent.mkdir(parents=True, exist_ok=True)
+    SOLOIST_ENV.write_text(f'SOLOIST_NAME="{safe_name}"\nSOLOIST_KEY={key}\n')
+    os.chmod(SOLOIST_ENV, 0o600)
+
+
+def soloist_restart() -> None:
+    subprocess.run(["systemctl", "daemon-reload"], check=False)
+    subprocess.run(["systemctl", "enable", "soloist"], check=False)
+    subprocess.run(["systemctl", "restart", "soloist"], check=False)
+
+
+def soloist_state() -> str:
+    proc = subprocess.run(["systemctl", "is-active", "soloist"], capture_output=True, text=True)
+    return proc.stdout.strip() or "inconnu"
 
 
 def login_required(view):
@@ -74,7 +108,12 @@ def index():
 @app.route("/api/status")
 @login_required
 def api_status():
-    return jsonify({"config": load_config(), "network": connection_status()})
+    return jsonify({
+        "config": load_config(),
+        "network": connection_status(),
+        "soloist": soloist_state(),
+        "soloist_key_set": bool(read_soloist_env().get("SOLOIST_KEY")),
+    })
 
 
 @app.route("/api/wifi/scan")
@@ -100,8 +139,11 @@ def api_connect():
 def api_system():
     data = request.get_json(force=True)
     cfg = load_config()
+    name_changed = False
     if "friendly_name" in data:
-        cfg["friendly_name"] = str(data["friendly_name"])[:64]
+        new_name = str(data["friendly_name"])[:64]
+        name_changed = new_name != cfg.get("friendly_name")
+        cfg["friendly_name"] = new_name
     if "new_pin" in data and data["new_pin"]:
         pin = str(data["new_pin"])
         if not (4 <= len(pin) <= 8 and pin.isdigit()):
@@ -110,7 +152,17 @@ def api_system():
         cfg["pin_salt"] = salt
         cfg["pin_hash"] = hash_pin(pin, salt)
     save_config(cfg)
-    return jsonify({"ok": True})
+
+    # Clé API Soloist : stockée uniquement dans /etc/hublot/soloist.env
+    key = str(data.get("soloist_api_key", "")).strip()
+    current = read_soloist_env()
+    if key or (name_changed and current.get("SOLOIST_KEY")):
+        final_key = key or current.get("SOLOIST_KEY", "")
+        if key and (len(key) < 10 or any(c.isspace() for c in key)):
+            abort(400)
+        write_soloist_env(cfg["friendly_name"], final_key)
+        soloist_restart()
+    return jsonify({"ok": True, "soloist": soloist_state()})
 
 
 if __name__ == "__main__":

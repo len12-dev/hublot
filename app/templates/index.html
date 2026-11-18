@@ -40,6 +40,7 @@
       <dt>Mode</dt><dd id="s-mode">—</dd>
       <dt>Réseau</dt><dd id="s-ssid">—</dd>
       <dt>Adresse IP</dt><dd id="s-ip">—</dd>
+      <dt>Soloist</dt><dd id="s-soloist">—</dd>
     </dl>
   </section>
 
@@ -55,6 +56,7 @@
   <section id="system">
     <label>Nom convivial<input id="friendly"></label>
     <label>Nouveau PIN (4 à 8 chiffres)<input id="new-pin" inputmode="numeric"></label>
+    <label>Clé API Soloist<input id="soloist-key" type="password" autocomplete="off"></label>
     <button class="btn" id="save-system">Enregistrer</button>
     <p id="sys-msg"></p>
   </section>
@@ -87,6 +89,8 @@
     $("s-mode").textContent = d.network.mode;
     $("s-ssid").textContent = d.network.ssid || "—";
     $("s-ip").textContent = d.network.ip || "—";
+    const sol = d.soloist === "active" ? "actif" : (d.soloist_key_set ? d.soloist : "clé API manquante");
+    $("s-soloist").textContent = sol;
   }
 
   $("scan").addEventListener("click", async () => {
@@ -112,7 +116,11 @@
   });
 
   $("save-system").addEventListener("click", async () => {
-    const body = { friendly_name: $("friendly").value, new_pin: $("new-pin").value };
+    const body = {
+      friendly_name: $("friendly").value,
+      new_pin: $("new-pin").value,
+      soloist_api_key: $("soloist-key").value,
+    };
     const r = await fetch("/api/system", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

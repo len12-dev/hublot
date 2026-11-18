@@ -1,0 +1,18 @@
+[Unit]
+Description=Spotify Soloist (lecteur Spotify Connect)
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+# Fichier écrit par l'interface Hublot : SOLOIST_NAME et SOLOIST_KEY (mode 600)
+EnvironmentFile=/etc/hublot/soloist.env
+ExecStart=/opt/soloist/soloist -n ${SOLOIST_NAME} -k ${SOLOIST_KEY} -D /var/lib/soloist -C /var/cache/soloist -w 127.0.0.1:0
+StateDirectory=soloist
+CacheDirectory=soloist
+Restart=on-failure
+RestartSec=10
+# Code 10 : build expiré, à mettre à jour
+SuccessExitStatus=0
+
+[Install]
+WantedBy=multi-user.target
