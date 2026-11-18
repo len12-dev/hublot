@@ -24,7 +24,8 @@ apt-get update
 apt-get install -y python3-venv network-manager
 
 mkdir -p /etc/hublot "$APP_DIR"
-cp -r app/. "$APP_DIR"/
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cp -r "$ROOT/app/." "$APP_DIR"/
 
 python3 -m venv "$APP_DIR/venv"
 "$APP_DIR/venv/bin/pip" install --upgrade pip flask gunicorn
@@ -40,7 +41,7 @@ rm -rf "$TMP"
 # Note : les builds Soloist expirent 90 jours après compilation (code de sortie 10).
 # Il faudra prévoir la mise à jour via la page « Mise à jour » de l'interface.
 
-cp systemd/hublot.service /etc/systemd/system/hublot.service
+cp "$ROOT/systemd/hublot.service" /etc/systemd/system/hublot.service
 systemctl daemon-reload
 systemctl enable hublot.service
 
