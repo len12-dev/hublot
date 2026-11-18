@@ -63,8 +63,12 @@ WantedBy=default.target
 EOF
 chown -R "$TARGET_USER":"$TARGET_USER" "/home/${TARGET_USER}/.config/systemd"
 
-sudo -u "$TARGET_USER" XDG_RUNTIME_DIR="/run/user/${TARGET_UID}" systemctl --user daemon-reload
-sudo -u "$TARGET_USER" XDG_RUNTIME_DIR="/run/user/${TARGET_UID}" systemctl --user enable --now shairport-sync
+# Démarre la session utilisateur (PipeWire) si elle ne tourne pas encore
+systemctl start "user@${TARGET_UID}.service"
+sleep 2
+USER_ENV=(XDG_RUNTIME_DIR="/run/user/${TARGET_UID}" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${TARGET_UID}/bus")
+sudo -u "$TARGET_USER" env "${USER_ENV[@]}" systemctl --user daemon-reload
+sudo -u "$TARGET_USER" env "${USER_ENV[@]}" systemctl --user enable --now shairport-sync
 
 echo "== 4. Mise à jour de Hublot (dernière release)"
 TMP="$(mktemp -d)"
